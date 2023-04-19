@@ -35,13 +35,14 @@
     :key="index"
     class="taskList"
     >
+      <div class="folderName">{{taskList.folderName}}</div>
       <div
-      v-for="(task, index) in taskList"
+      v-for="(task, index) in taskList.tasks"
       :key="index"
       class="taskFolder"
       >
         <div class="task">
-          <input type="checkbox">
+          <input type="checkbox" v-model="task.isDone">
           <div>{{task.text}}</div>
         </div>
       </div>
