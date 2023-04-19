@@ -1,38 +1,54 @@
 <template>
   <div class="app">
     <div class="foldersList">
+      <div :class="[{ activeFolder: 'allFolders' === activeFolder }, 'allFolder']" @click="activeFolder = 'allFolders'">
+        <!-- <img src="../images/menu.png" alt=""> -->
+        <div style="margin-left: 10px">Все задачи</div>
+      </div>
       <div 
       v-for="(folder, index) in folders" 
       :key="index" 
-      class="folder" 
+      class="folder"
+      :class="[{ activeFolder: folder.folderName === activeFolder }, 'folder']"
+      @click="activeFolder = folder.folderName; activeFolderIndex = index"
       >
-        <div>
-
-        </div>
+        <div class="circle" :class="folder.folderColor"></div>
+        <div style="margin-left: 10px">{{folder.folderName}}</div>
       </div>
-      <div class="folder" @click="newFolder">
+      <div class="newFolder" @click="newFolder">
         + Добавить папку
       </div>
       <div v-if="folderForm === true" class="folderForm">
-        <input v-model="folder.folderName" style="width: 80%; ">
+        <input v-model="activeName" class="folderInput">
 
         <div class="circles">
-          <div class="circle red" :class="{'active': activeColor === 'red'}" @click="activeColor = 'red'"></div>
-          <div class="circle orange"></div>
-          <div class="circle pink"></div>
-          <div class="circle green"></div>
-          <div class="circle blue"></div>
-          <div class="circle purple"></div>
-          <div class="circle black"></div>
+          <div 
+          v-for="(color, index) in colors"
+          :key="index"
+          :class="[{ active: color === activeColor}, 'circle', color]" @click="activeColor = color"></div>
         </div>
         <button class="addFolderButton" @click="addFolder">Добавить</button>
       </div>
     </div>
-    <div class="taskList">
-        <!-- <div v-if="tasks.length === 0">
-            Задачи отсутствуют
-        </div> -->
+    <div 
+    v-for="(taskList, index) in tasks"
+    :key="index"
+    class="taskList"
+    >
+      <div
+      v-for="(task, index) in taskList"
+      :key="index"
+      class="taskFolder"
+      >
+        <div class="task">
+          <input type="checkbox">
+          <div>{{task.text}}</div>
+        </div>
+      </div>
     </div>
+      <!-- <div v-if="tasks.length === 0">
+          Задачи отсутствуют
+      </div> -->
   </div>
 </template>
 
@@ -42,26 +58,59 @@
     name: 'App',
     data() {
       return {
-        folders: [],
+        folders: [
+          {
+            folderName: 'testFolder',
+            folderColor: 'pink',
+            tasks: [
+              {
+                isDone: false,
+                text: 'Закончить приложение'
+              },
+              {
+                isDone: true,
+                text: 'Добавить Folder Form'
+              },
+              {
+                isDone: false,
+                text: 'Добавить Task Form'
+              }
+            ]
+          }
+        ],
         folderForm: false,
-        folder: {
-          folderName: '',
-          folderColor: '',
-          tasks: [{
-
-          }]
-        },
-        activeColor: '',
+        activeColor: 'red',
+        activeName: '',
+        activeFolder: 'allFolders',
+        activeFolderIndex: '',
+        colors: ['red', 'orange', 'pink', 'green', 'blue', 'purple', 'black']
       }
+    },
+    computed: {
+      tasks() {
+        if (this.activeFolderIndex === '') {
+          return this.folders
+        }
+        else {
+          return [this.folders[this.activeFolderIndex]]
+        }
+      },
     },
     methods: {
       newFolder(){
         this.folderForm = true
       },
       addFolder(){
-        this.folders.push(this.folder)
-        this.folderName = ''
-        this.folderColor = ''
+        const folder = {
+          folderName: this.activeName,
+          folderColor: this.activeColor,
+          tasks: [{
+
+          }]
+        }
+        this.folders.push(folder)
+        this.activeColor = 'red'
+        this.activeName = ''
         this.folderForm = false
       }
     }
@@ -98,8 +147,51 @@ body{
   padding: 5px;
   font-size: 30px;
   text-align: center;
-  border: 3px solid black;
   border-radius: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding-left: 10%;
+}
+.allFolder{
+  width: 80%;
+  margin: 10px;
+  padding: 5px;
+  font-size: 30px;
+  text-align: center;
+  border-radius: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding-left: 10%;
+  padding-top: 20px;
+  padding-bottom: 20px;
+}
+.activeFolder{
+  width: 80%;
+  margin: 10px;
+  padding: 5px;
+  font-size: 30px;
+  text-align: center;
+  background: #FFFFFF;
+  box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.05);
+  border-radius: 4px;
+  border-radius: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding-left: 10%;
+  padding-top: 20px;
+  padding-bottom: 20px;
+}
+.newFolder{
+  width: 80%;
+  margin: 10px;
+  padding: 5px;
+  font-size: 30px;
+  text-align: center;
+  border-radius: 10px;
+  cursor: pointer;
 }
 .folderForm{
   width: 80%;
@@ -108,6 +200,7 @@ body{
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: space-around;
   border: 3px solid black;
   border-radius: 10px;
 }
@@ -120,7 +213,6 @@ body{
   width: 30px; 
   height: 30px; 
   border-radius: 50%; 
-  border: 1px solid rgb(104, 104, 104);
 }
 .red{
   background-color: rgb(255, 70, 70); 
@@ -144,6 +236,18 @@ body{
   background-color: black; 
 }
 .active {
-  border: 1px solid black;
+  border: 2px solid rgb(68, 68, 68);
+}
+.folderInput{
+  width: 80%;
+  height: 30px;
+  font-size: 25px;
+}
+.taskList {
+  width: 70%;
+  padding: 56px 55px;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid black;  
 }
 </style>
