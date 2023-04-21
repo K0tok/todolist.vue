@@ -49,7 +49,74 @@ fastify.get('/', async function (request, reply) {
     const client = await pool.connect()
     try{
         const users = await client.query(`select * from users`)
-        console.log(users)
+        console.log(users.rows)
+        reply.send(users.rows)
+    }
+    catch(e){
+        console.log(e)
+    }
+    finally{
+        client.release()
+    }
+})
+
+fastify.post('/folders/create', async function (request, reply) {
+    const client = await pool.connect()
+    const folderName = request.body.folderName
+    const folderColor = request.body.folderColor
+    try{
+        const users = await client.query(`insert into folders ("folderName", "folderColor") values ($1,$2) 
+        returning "folderId","folderName","folderColor"`,[folderName, folderColor])
+        reply.send(users.rows)
+    }
+    catch(e){
+        console.log(e)
+    }
+    finally{
+        client.release()
+    }
+})
+
+fastify.post('/folders/delete', async function (request, reply) {
+    const client = await pool.connect()
+    const folderId = request.body.folderId
+    try{
+        const users = await client.query(`delete from folders where "folderId" = ${folderId}`)
+        reply.send(users.rows)
+    }
+    catch(e){
+        console.log(e)
+    }
+    finally{
+        client.release()
+    }
+})
+
+fastify.post('/task/create', async function (request, reply) {
+    const client = await pool.connect()
+    const isDone = request.body.isDone
+    const taskText = request.body.taskText
+    const folderId = request.body.folderId
+    try{
+        const users = await client.query(`insert into tasks ("isDone", "taskText", "folderId") values ($1,$2,$3) 
+        returning "taskId","isDone","taskText","folderId"`,[isDone, taskText, folderId])
+        reply.send(users.rows)
+    }
+    catch(e){
+        console.log(e)
+    }
+    finally{
+        client.release()
+    }
+})
+
+fastify.post('/task/delete', async function (request, reply) {
+    const client = await pool.connect()
+    const folderId = request.body.folderId
+    const taskId = request.body.taskId
+    try{
+        const users = await client.query(`delete from tasks where "taskId" = ${taskId} and "folderId" = ${folderId}`)
+        reply.send(users.rows)
     }
     catch(e){
         console.log(e)
