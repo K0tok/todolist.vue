@@ -1,20 +1,28 @@
 <template>
   <div class="app">
     <div class="foldersList">
-      <div :class="[{ activeFolder: 'allFolders' === activeFolder }, 'allFolder']" @click="activeFolder = 'allFolders'">
+      <div :class="[{ activeId: '-1' === activeId }, 'allFolder']" @click="activeId = '-1'; activeFolderId = '-1'">
         <img src="../images/menu.png" alt="" style="height: 30px;">
         <div style="margin-left: 10px">Все задачи</div>
       </div>
-      <div 
-      v-for="(folder, index) in folders" 
-      :key="index" 
-      class="folder"
-      :class="[{ activeFolder: folder.folderName === activeFolder }, 'folder']"
-      @click="activeFolder = folder.folderName; activeFolderIndex = index"
-      >
-        <div class="circle" :class="folder.folderColor"></div>
-        <div style="margin-left: 10px">{{folder.folderName}}</div>
-        <img src="../images/x.png" alt="Delete" style="height: 25px; margin-left: auto" @click="deleteFolder(index)">
+      <div v-if="folders.length === 0">
+        Папок нет
+      </div>
+      <div v-else style="width: 100%">
+        <div 
+        v-for="(folder, index) in folders" 
+        :key="index" 
+        class="folder"
+        :class="[{ activeId: folder.id === activeId }, 'folder']"
+        @click="activeId = folder.id; activeFolderId = folder.id"
+        >
+          <div class="circle" :class="folder.folderColor"></div>
+          <div v-if="isEditFolder !== folder.id" style="margin-left: 10px">{{folder.folderName}}</div>
+          <input v-else class="editInput" :placeholder="folder.folderName" v-model="activeEditFolderText">
+          <img v-if="isEditFolder !== folder.id" src="../images/edit.png" alt="Edit" style="height: 35px; margin: 0 0 0 auto" @click="editFolder(folder.id)">
+          <img v-else src="../images/tick.png" alt="Tick" style="height: 25px; margin: 0 0 0 auto" @click="acceptEditFolder(folder.id)">
+          <img src="../images/x.png" alt="Delete" style="height: 20px; margin: 0 20px 0 10px" @click="deleteFolder(folder.id)">
+        </div>
       </div>
       <div class="newFolder" @click="newFolder">
         + Добавить папку
@@ -50,14 +58,18 @@
         >
           <div class="task">
             <input class="taskCheck" type="checkbox" v-model="task.isDone">
-            <div>{{task.text}}</div>
+            <div v-if="IsEditTask !== task.id">{{task.text}}</div>
+            <input v-else v-model="activeEditTaskText" :placeholder="task.text" class="editInput">
+            <img v-if="IsEditTask !== task.id && activeFolderId !== '-1'" src="../images/edit.png" alt="Edit" style="height: 35px; margin: 0 0 0 20px; cursor: pointer;" @click="editTask(task.id)">
+            <img v-else-if="IsEditTask == task.id && activeFolderId !== '-1'" src="../images/tick.png" alt="Tick" style="height: 25px; margin: 0 0 0 20px; cursor: pointer;" @click="acceptEditTask(task.id)">
+            <img v-if="activeFolderId !== '-1'" src="../images/x.png" alt="Delete" style="height: 20px; margin: 0 20px 0 10px; cursor: pointer;" @click="deleteTask(task.id)">
           </div>
         </div>
-        <div class="task taskFormButton" v-if="taskForm === false && activeFolder !== 'allFolders'" @click="taskForm = true">+  Новая задача</div>
-        <div class="task taskFormButton" v-if="taskForm === true && activeFolder !== 'allFolders'" @click="taskForm = false">+  Новая задача</div>
-        <div class="task taskForm" v-if="taskForm === true && activeFolder !== 'allFolders'">
+        <div class="task taskFormButton" v-if="taskForm === false && activeId !== '-1'" @click="taskForm = true">+  Новая задача</div>
+        <div class="task taskFormButton" v-if="taskForm === true && activeId !== '-1'" @click="taskForm = false">+  Новая задача</div>
+        <div class="task taskForm" v-if="taskForm === true && activeId !== '-1'">
           <input class="taskText" v-model="activeText" placeholder="Текст Задачи">
-          <button class="addFolderButton" @click="addTask(activeFolder)">Добавить</button>
+          <button class="addFolderButton" @click="addTask(activeId)">Добавить</button>
         </div>
       </div>
     </div>
@@ -72,20 +84,24 @@
       return {
         folders: [
           {
+            id: 1,
             folderName: 'testFolder',
             folderColor: 'pink',
             tasks: [
               {
                 isDone: false,
-                text: 'Закончить приложение'
+                text: 'Закончить приложение',
+                id: '0908787'
               },
               {
                 isDone: true,
-                text: 'Добавить Folder Form'
+                text: 'Добавить Folder Form',
+                id: '23113'
               },
               {
                 isDone: false,
-                text: 'Добавить Task Form'
+                text: 'Добавить Task Form',
+                id: '423423'
               }
             ]
           }
@@ -94,18 +110,24 @@
         taskForm: false,
         activeColor: 'red',
         activeName: '',
-        activeFolder: 'allFolders',
-        activeFolderIndex: '',
+        activeId: '-1',
+        activeFolderId: '-1',
+        activeText: '',
+        isEditFolder: '',
+        activeEditFolderText: '',
+        IsEditTask: '',
+        activeEditTaskText: '',
         colors: ['red', 'orange', 'pink', 'green', 'blue', 'purple', 'black']
       }
     },
     computed: {
       tasks() {
-        if (this.activeFolderIndex === '') {
+        if (this.activeFolderId === '-1') {
           return this.folders
         }
         else {
-          return [this.folders[this.activeFolderIndex]]
+          let index = this.folders.findIndex(x => x.id === this.activeFolderId)
+          return [this.folders[index]]
         }
       },
     },
@@ -115,29 +137,58 @@
       },
       addFolder(){
         const folder = {
+          id: new Date().getTime(),
           folderName: this.activeName,
           folderColor: this.activeColor,
-          tasks: [{
-
-          }]
+          tasks: []
         }
         this.folders.push(folder)
         this.activeColor = 'red'
         this.activeName = ''
         this.folderForm = false
       },
-      addTask(folderName){
+      addTask(activeId){
         const task = {
           isDone: false,
-          text: this.activeText
+          text: this.activeText,
+          id: new Date().getTime()
         }
-        const index = this.folders.findIndex(x => x.folderName === folderName)
+        const index = this.folders.findIndex(x => x.id === activeId)
         this.folders[index].tasks.push(task)
         this.activeText = ''
         this.taskForm = false
       },
-      deleteFolder(index){
-        this.folders.pop(index)
+      deleteFolder(id){
+        const index = this.folders.findIndex(x => x.id === id)
+        this.folders.splice(index, 1)
+        if (this.activeFolderId === id || this.folders.length ===0){
+          this.activeFolderId = '-1'
+          this.activeId = '-1'
+        }
+      },
+      editFolder(id){
+        this.isEditFolder = id
+      },
+      acceptEditFolder(id){
+        const index = this.folders.findIndex(x => x.id === id)
+        this.folders[index].folderName = this.activeEditFolderText
+        this.isEditFolder = ''
+        this.activeEditFolderText = ''
+      },
+      editTask(id){
+        this.IsEditTask = id
+      },
+      acceptEditTask(id){
+        const folderIndex = this.folders.findIndex(x => x.id === this.activeFolderId)
+        const taskIndex = this.folders[folderIndex].tasks.findIndex(x => x.id === id)
+        this.folders[folderIndex].tasks[taskIndex].text = this.activeEditTaskText
+        this.IsEditTask = ''
+        this.activeEditTaskText = ''
+      },
+      deleteTask(id){
+        const folderIndex = this.folders.findIndex(x => x.id === this.activeFolderId)
+        const taskIndex = this.folders[folderIndex].tasks.findIndex(x => x.id === id)
+        this.folders[folderIndex].tasks.splice(taskIndex, 1)
       }
     }
   }
@@ -194,7 +245,7 @@ body{
   padding-top: 20px;
   padding-bottom: 20px;
 }
-.activeFolder{
+.activeId{
   width: 80%;
   margin: 10px;
   padding: 5px;
@@ -219,6 +270,12 @@ body{
   text-align: center;
   border-radius: 10px;
   cursor: pointer;
+}
+.editInput{
+  width: 50%;
+  height: 25px;
+  font-size: 20px;
+  margin-left: 10px
 }
 .folderForm{
   width: 90%;
@@ -305,9 +362,10 @@ body{
 .task{
   padding-left: 30px;
   margin: 10px;
-  font-size: 20px;
+  font-size: 30px;
   display: flex;
   flex-direction: row;
+  align-items: center;
 }
 .taskCheck{
   width: 20px;
@@ -323,6 +381,7 @@ body{
 .taskForm{
   width: 30%;
   height: 70px;
+  padding: 10px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -331,6 +390,6 @@ body{
   border-radius: 4px;
   border-radius: 10px;
   border-radius: 10px;
-
+  background-color: #F4F6F8;
 }
 </style>
