@@ -8,7 +8,7 @@
       <div v-if="folders.length === 0">
         Папок нет
       </div>
-      <div v-else style="width: 100%">
+      <div v-else style="width: 100%; margin: 30px 10px 10px 10px;">
         <div 
         v-for="(folder, index) in folders" 
         :key="index" 
@@ -28,8 +28,8 @@
         + Добавить папку
       </div>
       <div v-if="folderForm === true" class="folderForm">
+        <img class="close" src="../images/close.png" @click="folderForm = false">
         <input v-model="activeName" class="folderInput">
-
         <div class="circles">
           <div 
           v-for="(color, index) in colors"
@@ -68,8 +68,9 @@
         <div class="task taskFormButton" v-if="taskForm === false && activeId !== '-1'" @click="taskForm = true">+  Новая задача</div>
         <div class="task taskFormButton" v-if="taskForm === true && activeId !== '-1'" @click="taskForm = false">+  Новая задача</div>
         <div class="task taskForm" v-if="taskForm === true && activeId !== '-1'">
-          <input class="taskText" v-model="activeText" placeholder="Текст Задачи">
-          <button class="addFolderButton" @click="addTask(activeId)">Добавить</button>
+          <img class="taskClose" src="../images/close.png" @click="taskForm = false">
+          <input class="taskInput" v-model="activeText" placeholder="Текст Задачи">
+          <button class="addTaskButton" @click="addTask(activeId)">Добавить</button>
         </div>
       </div>
     </div>
@@ -117,6 +118,7 @@
         activeEditFolderText: '',
         IsEditTask: '',
         activeEditTaskText: '',
+        folderNumber: 1,
         colors: ['red', 'orange', 'pink', 'green', 'blue', 'purple', 'black']
       }
     },
@@ -133,7 +135,12 @@
     },
     methods: {
       newFolder(){
-        this.folderForm = true
+        if (this.folderForm == true){
+          this.folderForm = false
+        }
+        else{
+          this.folderForm = true
+        }
       },
       addFolder(){
         const folder = {
@@ -141,6 +148,10 @@
           folderName: this.activeName,
           folderColor: this.activeColor,
           tasks: []
+        }
+        if (folder.folderName == ''){
+          folder.folderName = 'Новая папка(' + this.folderNumber.toString() + ')'
+          this.folderNumber += 1
         }
         this.folders.push(folder)
         this.activeColor = 'red'
@@ -209,7 +220,7 @@ body{
   flex-direction: row;
 }
 .foldersList {
-  width: 30%;
+  width: 35%;
   height: 100%;
   padding-top: 50px;
   background-color: #F4F6F8;
@@ -264,7 +275,7 @@ body{
 }
 .newFolder{
   width: 80%;
-  margin: 10px;
+  margin: 30px 10px 10px -80px;
   padding: 5px;
   font-size: 30px;
   text-align: center;
@@ -281,15 +292,17 @@ body{
   width: 90%;
   height: 150px;
   font-size: 30px;
+  padding: 20px 0 20px 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: space-around;
   background: #FFFFFF;
-  box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.05);
+  box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.05);
   border-radius: 4px;
   border-radius: 10px;
   border-radius: 10px;
+  z-index: 999;
 }
 .addFolderButton{
   width: 80%;
@@ -299,6 +312,11 @@ body{
   background: #4DD599;
   border: 1px solid #4DD599;
   border-radius: 4px;
+}
+.close{
+  margin: -40px -15px 0px auto;
+  height: 30px;
+  width: 30px;
 }
 .circles{
   display: flex;
@@ -343,13 +361,14 @@ body{
   border: 2px solid rgb(68, 68, 68);
 }
 .folderInput{
-  width: 80%;
+  width: 75%;
   height: 30px;
   font-size: 25px;
 }
 .folderTaskList{
-  width: 70%;
+  width: 65%;
   padding: 100px 55px;
+  background-color: #f4feff;
 }
 .taskList {
   display: flex;
@@ -357,6 +376,9 @@ body{
 }
 .folderName{
   font-size: 50px;
+  padding-bottom: 30px;
+  margin-bottom: 20px;
+  border-bottom: 2px solid #F2F2F2;
   background-color: white;
 }
 .task{
@@ -378,9 +400,28 @@ body{
   color: grey;
   cursor: pointer;
 }
+.taskClose{
+  margin: -30px -15px 0px auto;
+  height: 30px;
+  width: 30px;
+}
+.taskInput{
+  width: 90%;
+  height: 30px;
+  font-size: 25px;
+}
+.addTaskButton{
+  width: 91%;
+  height: 40px;
+  font-size: 25px;
+  cursor: pointer;
+  background: #4DD599;
+  border: 1px solid #4DD599;
+  border-radius: 4px;
+}
 .taskForm{
-  width: 30%;
-  height: 70px;
+  width: 40%;
+  height: 100px;
   padding: 10px;
   display: flex;
   flex-direction: column;
