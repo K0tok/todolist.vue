@@ -27,6 +27,7 @@
       <div class="newFolder" @click="newFolder">
         + Добавить папку
       </div>
+      <div class="idk" v-if="folderForm === false"></div>
       <div v-if="folderForm === true" class="folderForm">
         <img class="close" src="../images/close.png" @click="folderForm = false">
         <input v-model="activeName" class="folderInput">
@@ -39,6 +40,7 @@
         <button class="addFolderButton" @click="addFolder">Добавить</button>
       </div>
     </div>
+    
     <div class="folderTaskList">
       <div
       v-if="folders.length === 0"
@@ -67,6 +69,7 @@
         </div>
         <div class="task taskFormButton" v-if="taskForm === false && activeId !== '-1'" @click="taskForm = true">+  Новая задача</div>
         <div class="task taskFormButton" v-if="taskForm === true && activeId !== '-1'" @click="taskForm = false">+  Новая задача</div>
+        <div class="idk" v-if="taskForm === false"></div>
         <div class="task taskForm" v-if="taskForm === true && activeId !== '-1'">
           <img class="taskClose" src="../images/close.png" @click="taskForm = false">
           <input class="taskInput" v-model="activeText" placeholder="Текст Задачи">
@@ -220,11 +223,13 @@ body{
   flex-direction: row;
 }
 .foldersList {
+  position: fixed;
   width: 35%;
   height: 100%;
   padding-top: 50px;
   background-color: #F4F6F8;
   border-right: 1px solid #F1F1F1;
+  overflow: auto;
 
   display: flex;
   flex-direction: column;
@@ -293,6 +298,7 @@ body{
   height: 150px;
   font-size: 30px;
   padding: 20px 0 20px 0;
+  margin-bottom: 100px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -367,6 +373,7 @@ body{
 }
 .folderTaskList{
   width: 65%;
+  margin-left: 35%;
   padding: 100px 55px;
   background-color: #f4feff;
 }
@@ -423,6 +430,7 @@ body{
   width: 40%;
   height: 100px;
   padding: 10px;
+  margin-bottom: 100px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -432,5 +440,8 @@ body{
   border-radius: 10px;
   border-radius: 10px;
   background-color: #F4F6F8;
+}
+.idk{
+  height: 150px;
 }
 </style>

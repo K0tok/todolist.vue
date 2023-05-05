@@ -91,9 +91,14 @@ fastify.post('/folders/create', async function (request, reply) {
     const folderName = request.body.folderName
     const folderColor = request.body.folderColor
     try{
-        const users = await client.query(`insert into folders ("folderName", "folderColor") values ($1,$2) 
+        const folders = await client.query(`insert into folders ("folderName", "folderColor") values ($1,$2) 
         returning "folderId","folderName","folderColor"`,[folderName, folderColor])
-        data.message = folders.rows
+        if (folders.rows.length > 0 && folders.rowCount > 0){
+            data.message = folders.rows
+        }
+        else {
+            data.message = `error: 'Данные не переданы на сервер, т.к. ничего не получено на входе.'`
+        }
     }
     catch(e){
         console.log(e)
@@ -118,7 +123,12 @@ fastify.post('/folders/edit', async function (request, reply) {
     try{
         const folders = await client.query(`UPDATE folders SET "folderName" = '${newFolderName}', "folderColor" = '${newFolderColor}' 
         WHERE "folderId" = ${folderId}`)
-        data.message = folders.rows
+        if (folders.rows.length > 0 && folders.rowCount > 0){
+            data.message = folders.rows
+        }
+        else {
+            data.message = `error: 'Данные не переданы на сервер, т.к. ничего не получено на входе.'`
+        }
     }
     catch(e){
         console.log(e)
@@ -140,7 +150,12 @@ fastify.post('/folders/delete', async function (request, reply) {
     const folderId = request.body.folderId
     try{
         const users = await client.query(`delete from folders where "folderId" = ${folderId}`)
-        data.message = folders.rows
+        if (folders.rows.length > 0 && folders.rowCount > 0){
+            data.message = folders.rows
+        }
+        else {
+            data.message = `error: 'Данные не переданы на сервер, т.к. ничего не получено на входе.'`
+        }
     }
     catch(e){
         console.log(e)
@@ -186,30 +201,12 @@ fastify.post('/tasks/create', async function (request, reply) {
     try{
         const tasks = await client.query(`insert into tasks ("isDone", "taskText", "folderId") values ($1,$2,$3) 
         returning "taskId","isDone","taskText","folderId"`,[isDone, taskText, folderId])
-        data.message = tasks.rows
-    }
-    catch(e){
-        console.log(e)
-    }
-    finally{
-        client.release()
-        console.log(urlName, 'client release()')
-    }
-    reply.send(data)
-})
-
-fastify.post('/tasks/delete', async function (request, reply) {
-    let data = {
-        message: 'error',
-        statusCode: 400
-    }
-    const urlName = '/tasks/delete'
-    const client = await pool.connect()
-    const folderId = request.body.folderId
-    const taskId = request.body.taskId
-    try{
-        const tasks = await client.query(`delete from tasks where "taskId" = ${taskId} and "folderId" = ${folderId}`)
-        data.message = tasks.rows
+        if (tasks.rows.length > 0 && tasks.rowCount > 0){
+            data.message = tasks.rows
+        }
+        else {
+            data.message = `error: 'Данные не переданы на сервер, т.к. ничего не получено на входе.'`
+        }
     }
     catch(e){
         console.log(e)
@@ -235,7 +232,12 @@ fastify.post('/tasks/edit', async function (request, reply) {
     try{
         const tasks = await client.query(`UPDATE tasks SET "taskText" = '${newTaskText}', "isDone" = '${newIsDone}' 
         WHERE "folderId" = ${folderId} and "taskId" = ${taskId}`)
-        data.message = tasks.rows
+        if (tasks.rows.length > 0 && tasks.rowCount > 0){
+            data.message = tasks.rows
+        }
+        else {
+            data.message = `error: 'Данные не переданы на сервер, т.к. ничего не получено на входе.'`
+        }
     }
     catch(e){
         console.log(e)
@@ -247,6 +249,56 @@ fastify.post('/tasks/edit', async function (request, reply) {
     reply.send(data)
 })
 
+fastify.post('/tasks/delete', async function (request, reply) {
+    let data = {
+        message: 'error',
+        statusCode: 400
+    }
+    const urlName = '/tasks/delete'
+    const client = await pool.connect()
+    const folderId = request.body.folderId
+    const taskId = request.body.taskId
+    try{
+        const tasks = await client.query(`delete from tasks where "taskId" = ${taskId} and "folderId" = ${folderId}`)
+        if (tasks.rows.length > 0 && tasks.rowCount > 0){
+            data.message = tasks.rows
+        }
+        else {
+            data.message = `error: 'Данные не переданы на сервер, т.к. ничего не получено на входе.'`
+        }
+    }
+    catch(e){
+        console.log(e)
+    }
+    finally{
+        client.release()
+        console.log(urlName, 'client release()')
+    }
+    reply.send(data)
+})
+
+fastify.post('/show', async function(request, reply){
+    let data = {
+        message: 'error',
+        statusCode: 400
+    }
+    const urlName = '/show'
+    const client = await pool.connect()
+    const folderId = request.body.folderId
+    try{
+        const tasks = await client.query(`select T."taskId",T."taskText",T."isDone",F."folderName",F."folderColor" from tasks T 
+        inner join folders F on T."folderId" = F."folderId" where T."folderId" = ${folderId}`)
+        data.message = tasks.rows
+    }
+    catch(e){
+        console.log(e);
+    }
+    finally{
+        client.release()
+        console.log(urlName, 'client release()')
+    }
+    reply.send(data)
+})
 
 // Создание маршрута для post запроса
 fastify.post('/post',function (request, reply) {
