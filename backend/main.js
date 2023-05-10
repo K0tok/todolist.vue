@@ -45,20 +45,20 @@ fastify.register(require('@fastify/cors'), (instance) => {
 })
 
 // Создание маршрута для get запроса
-fastify.get('/', async function (request, reply) {
-    const client = await pool.connect()
-    try{
-        const users = await client.query(`select * from users`)
-        console.log(users.rows)
-        reply.send(users.rows)
-    }
-    catch(e){
-        console.log(e)
-    }
-    finally{
-        client.release()
-    }
-})
+// fastify.get('/', async function (request, reply) {
+//     const client = await pool.connect()
+//     try{
+//         const users = await client.query(`select * from users`)
+//         console.log(users.rows)
+//         reply.send(users.rows)
+//     }
+//     catch(e){
+//         console.log(e)
+//     }
+//     finally{
+//         client.release()
+//     }
+// })
 
 fastify.get('/folders/show', async function(request, reply){
     let data = {
@@ -69,6 +69,10 @@ fastify.get('/folders/show', async function(request, reply){
     const client = await pool.connect()
     try{
         const folders = await client.query('select "folderId","folderName","folderColor" from folders')
+        console.log(folders.rows)
+        for(let folder of folders.rows){
+            folder.tasks = []
+        }
         data.message = folders.rows
     }
     catch(e){
@@ -94,11 +98,12 @@ fastify.post('/folders/create', async function (request, reply) {
         const folders = await client.query(`insert into folders ("folderName", "folderColor") values ($1,$2) 
         returning "folderId","folderName","folderColor"`,[folderName, folderColor])
         if (folders.rows.length > 0 && folders.rowCount > 0){
-            data.message = folders.rows
+            data.message = folders.rows[0]
         }
         else {
             data.message = `error: 'Данные не переданы на сервер, т.к. ничего не получено на входе.'`
         }
+        data.statusCode = 200
     }
     catch(e){
         console.log(e)
